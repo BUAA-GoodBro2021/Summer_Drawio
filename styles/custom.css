@@ -1,0 +1,6 @@
+input, select {
+    box-sizing: border-box;
+    border: 1px solid #ddd;
+    height: 22px;
+    padding: 2px 4px;
+}

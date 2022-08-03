@@ -1,0 +1,21 @@
+{
+  "name": "afc-draw",
+  "version": "13.7.8",
+  "description": "AFC diagrams",
+  "scripts": {
+    "start": "serve . -l 5050",
+    "build": "cd ./build&&ant"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jgraph/drawio.git"
+  },
+  "keywords": [
+    "draw.io",
+    "diagram",
+    "flowchart",
+    "UML"
+  ],
+  "author": "JGraph",
+  "license": "Apache-2.0"
+}
