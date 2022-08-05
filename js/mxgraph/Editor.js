@@ -1989,7 +1989,6 @@ var FilenameDialog = function(editorUi, filename, buttonText, fn, label, validat
 	{
 		// 命名
 		var filenameInput = nameInput.value;
-		filenameInput = project_id + '-' + filenameInput;
 		if (validateFn == null || validateFn(filenameInput))
 		{
 			if (closeOnBtn)

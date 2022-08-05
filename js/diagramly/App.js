@@ -2058,8 +2058,7 @@ App.prototype.updateDocumentTitle = function()
 		
 		if (file != null)
 		{
-			var filename = (file.getTitle() != null) ? file.getTitle() : this.defaultFilename;
-			title = filename + ' - ' + title;
+			title = '墨书' + ' - ' + title;
 		}
 		
 		if (document.title != title)
@@ -3226,89 +3225,38 @@ App.prototype.checkDrafts = function()
 			this.getDatabaseItems(mxUtils.bind(this, function(items)
 			{
 				// Collects orphaned drafts
-				var drafts = [];
-				
-				for (var i = 0; i < items.length; i++)
-				{
-					try
-					{
-						var key = items[i].key;
+				// var drafts = [];
+				data = "<mxfile host=\"localhost\" modified=\"2022-08-04T15:08:44.218Z\" agent=\"5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.134 Safari/537.36 Edg/103.0.1264.77\" etag=\"N-DtEMBfSqfzUp4MKHJz\" version=\"@DRAWIO-VERSION@\"><diagram id=\"cYfSQBdyGxRg1SXCIgdQ\" name=\"第 1 页\">dZFNE4IgEIZ/DXeFJvVsVpdOHjqToDIh6yCO1q9PAzPG4sDsPvvxsgsiaTOeNG3rCzAuEQ7YiMgBYRwH8XTP4GFBlOwsqLRgFoUryMWTOxg42gvGOy/RAEgjWh8WoBQvjMeo1jD4aSVIX7WlFd+AvKByS6+CmdqNhaOVn7mo6kU53Cc2cqPFvdLQK6eHMCnfx4YbuvRyg3Y1ZTB8iZIMkVQDGGs1Y8rlvNplbbbu+Cf6ebfmyvwomIy19+R4/0eyFw==</diagram></mxfile>";
+				// drafts.push({"type":"draft","created":1659625616697,"modified":1659625724217,"data":,"title":"未命名"});
+				// for (var i = 0; i < items.length; i++)
+				// {
+				// 	try
+				// 	{
+				// 		var key = items[i].key;
 						
-						if (key != null && key.substring(0, 7) == '.draft_')
-						{
-							var obj = JSON.parse(items[i].data);
+				// 		if (key != null && key.substring(0, 7) == '.draft_')
+				// 		{
+				// 			var obj = JSON.parse(items[i].data);
 							
-							if (obj != null && obj.type == 'draft' && obj.aliveCheck != guid)
-							{
-								obj.key = key;
-								drafts.push(obj);
-							}
-						}
-					}
-					catch (e)
-					{
-						// ignore
-					}
+				// 			if (obj != null && obj.type == 'draft' && obj.aliveCheck != guid)
+				// 			{
+				// 				obj.key = key;
+				// 				drafts.push(obj);
+				// 			}
+				// 		}
+				// 	}
+				// 	catch (e)
+				// 	{
+				// 		// ignore
+				// 	}
+				// }
+				if(diagram_content != null) {
+					data = diagram_content;
 				}
-				
-				if (drafts.length == 1)
+				this.loadDraft(data, mxUtils.bind(this, function()
 				{
-					this.loadDraft(drafts[0].data, mxUtils.bind(this, function()
-					{
-						this.removeDatabaseItem(drafts[0].key);
-					}));
-				}
-				else if (drafts.length > 1)
-				{
-					var ts = new Date(drafts[0].modified);
-					
-					var dlg = new DraftDialog(this, (drafts.length > 1) ? mxResources.get('selectDraft') :
-						mxResources.get('draftFound', [ts.toLocaleDateString() + ' ' + ts.toLocaleTimeString()]),
-						(drafts.length > 1) ? null : drafts[0].data, mxUtils.bind(this, function(index)
-					{
-						this.hideDialog();
-						index = (index != '') ? index : 0;
-						
-						this.loadDraft(drafts[index].data, mxUtils.bind(this, function()
-						{
-							this.removeDatabaseItem(drafts[index].key);
-						}));
-					}), mxUtils.bind(this, function(index, success)
-					{
-						index = (index != '') ? index : 0;
-						
-						// Discard draft
-						this.confirm(mxResources.get('areYouSure'), null, mxUtils.bind(this, function()
-						{
-							this.removeDatabaseItem(drafts[index].key);
-							
-							if (success != null)
-							{
-								success();
-							}
-						}), mxResources.get('no'), mxResources.get('yes'));
-					}), null, null, null, (drafts.length > 1) ? drafts : null);
-					this.showDialog(dlg.container, 640, 480, true, false, mxUtils.bind(this, function(cancel)
-					{
-						if (urlParams['splash'] != '0')
-						{
-							this.loadFile();
-						}
-						else
-						{
-							this.createFile(this.defaultFilename, this.getFileData(), null, null, null, null, null, true);
-						}
-					}));
-					dlg.init();
-				}
-				else if (urlParams['splash'] != '0')
-				{
-					this.loadFile();
-				}
-				else
-				{
-					this.createFile(this.defaultFilename, this.getFileData(), null, null, null, null, null, true);
-				}
+					this.removeDatabaseItem();
+				}));
 			}), mxUtils.bind(this, function()
 			{
 				if (urlParams['splash'] != '0')
@@ -3889,169 +3837,168 @@ App.prototype.saveLibrary = function(name, images, file, mode, noSpin, noReload,
  */
 App.prototype.saveFile = function(forceDialog, success)
 {
-	var file = this.getCurrentFile();
-	
-	if (file != null)
-	{
-		// FIXME: Invoke for local files
-		var done = mxUtils.bind(this, function()
-		{
-			if (EditorUi.enableDrafts)
-			{
-				file.removeDraft();
-			}
+	alert('保存成功!');
+	// var file = this.getCurrentFile();
+	// console.log('------------------------');
+	// if (file != null)
+	// {
+	// 	// FIXME: Invoke for local files
+	// 	var done = mxUtils.bind(this, function()
+	// 	{
+	// 		if (EditorUi.enableDrafts)
+	// 		{
+	// 			file.removeDraft();
+	// 		}
 			
-			if (this.getCurrentFile() != file && !file.isModified())
-			{
-				// Workaround for possible status update while save as dialog is showing
-				// is to show no saved status for device files
-				if (file.getMode() != App.MODE_DEVICE)
-				{
-					this.editor.setStatus(mxUtils.htmlEntities(mxResources.get('allChangesSaved')));
-				}
-				else
-				{
-					this.editor.setStatus('');
-				}
-			}
+	// 		if (this.getCurrentFile() != file && !file.isModified())
+	// 		{
+	// 			// Workaround for possible status update while save as dialog is showing
+	// 			// is to show no saved status for device files
+	// 			if (file.getMode() != App.MODE_DEVICE)
+	// 			{
+	// 				this.editor.setStatus(mxUtils.htmlEntities(mxResources.get('allChangesSaved')));
+	// 			}
+	// 			else
+	// 			{
+	// 				this.editor.setStatus('');
+	// 			}
+	// 		}
 			
-			if (success != null)
-			{
-				success();
-			}
-		});
+	// 		if (success != null)
+	// 		{
+	// 			success();
+	// 		}
+	// 	});
 		
-		if (!forceDialog && file.getTitle() != null && file.invalidFileHandle == null && this.mode != null)
-		{
-			this.save(file.getTitle(), done);
-		}
-		else if (file != null && file.constructor == LocalFile && file.fileHandle != null)
-		{
-			this.chooseFileSystemEntries(mxUtils.bind(this, function(fileHandle, desc)
-			{
-				file.invalidFileHandle = null;
-				file.fileHandle = fileHandle;
-				file.title = desc.name;
-				file.desc = desc;
-				this.save(desc.name, done);
-			}), null, this.createFileSystemOptions(file.getTitle()));
-		}
-		else
-		{
-			var filename = (file.getTitle() != null) ? file.getTitle() : this.defaultFilename;
-			// 显示名称移除
-			filename = filename.replace(/^.+-/, '');
-			var allowTab = !mxClient.IS_IOS || !navigator.standalone;
-			var prev = this.mode;
-			var serviceCount = this.getServiceCount(true);
+	// 	if (!forceDialog && file.getTitle() != null && file.invalidFileHandle == null && this.mode != null)
+	// 	{
+	// 		this.save(file.getTitle(), done);
+	// 	}
+	// 	else if (file != null && file.constructor == LocalFile && file.fileHandle != null)
+	// 	{
+	// 		this.chooseFileSystemEntries(mxUtils.bind(this, function(fileHandle, desc)
+	// 		{
+	// 			file.invalidFileHandle = null;
+	// 			file.fileHandle = fileHandle;
+	// 			file.title = desc.name;
+	// 			file.desc = desc;
+	// 			this.save(desc.name, done);
+	// 		}), null, this.createFileSystemOptions(file.getTitle()));
+	// 	}
+	// 	else
+	// 	{
+	// 		var filename = (file.getTitle() != null) ? file.getTitle() : this.defaultFilename;
+	// 		// 显示名称移除
+	// 		filename = filename.replace(/^.+-/, '');
+	// 		var allowTab = !mxClient.IS_IOS || !navigator.standalone;
+	// 		var prev = this.mode;
+	// 		var serviceCount = this.getServiceCount(true);
 			
-			if (isLocalStorage)
-			{
-				serviceCount++;
-			}
+	// 		if (isLocalStorage)
+	// 		{
+	// 			serviceCount++;
+	// 		}
 			
-			var rowLimit = (serviceCount <= 4) ? 2 : (serviceCount > 6 ? 4 : 3);
+	// 		var rowLimit = (serviceCount <= 4) ? 2 : (serviceCount > 6 ? 4 : 3);
 			
-			var dlg = new CreateDialog(this, filename, mxUtils.bind(this, function(name, mode, input)
-			{
-				// 保存时添加项目id前缀
-				name = project_id + '-' + name;
-				if (name != null && name.length > 0)
-				{
-					// Handles special case where PDF export is detected
-					if (/(\.pdf)$/i.test(name))
-					{
-						this.confirm(mxResources.get('didYouMeanToExportToPdf'), mxUtils.bind(this, function()
-						{
-							this.hideDialog();
-							this.actions.get('exportPdf').funct();
-						}), mxUtils.bind(this, function()
-						{
-							input.value = name.split('.').slice(0, -1).join('.');
-							input.focus();
+	// 		var dlg = new CreateDialog(this, filename, mxUtils.bind(this, function(name, mode, input)
+	// 		{
+	// 			if (name != null && name.length > 0)
+	// 			{
+	// 				// Handles special case where PDF export is detected
+	// 				if (/(\.pdf)$/i.test(name))
+	// 				{
+	// 					this.confirm(mxResources.get('didYouMeanToExportToPdf'), mxUtils.bind(this, function()
+	// 					{
+	// 						this.hideDialog();
+	// 						this.actions.get('exportPdf').funct();
+	// 					}), mxUtils.bind(this, function()
+	// 					{
+	// 						input.value = name.split('.').slice(0, -1).join('.');
+	// 						input.focus();
 							
-							if (mxClient.IS_GC || mxClient.IS_FF || document.documentMode >= 5 || mxClient.IS_QUIRKS)
-							{
-								input.select();
-							}
-							else
-							{
-								document.execCommand('selectAll', false, null);
-							}
-						}), mxResources.get('yes'), mxResources.get('no'));
-					}
-					else
-					{
-						this.hideDialog();
+	// 						if (mxClient.IS_GC || mxClient.IS_FF || document.documentMode >= 5 || mxClient.IS_QUIRKS)
+	// 						{
+	// 							input.select();
+	// 						}
+	// 						else
+	// 						{
+	// 							document.execCommand('selectAll', false, null);
+	// 						}
+	// 					}), mxResources.get('yes'), mxResources.get('no'));
+	// 				}
+	// 				else
+	// 				{
+	// 					this.hideDialog();
 						
-						if (prev == null && mode == App.MODE_DEVICE)
-						{
-							if (file != null && 'chooseFileSystemEntries' in window)
-							{
-								this.chooseFileSystemEntries(mxUtils.bind(this, function(fileHandle, desc)
-								{
-									file.fileHandle = fileHandle;
-									file.mode = App.MODE_DEVICE;
-									file.title = desc.name;
-									file.desc = desc;
+	// 					if (prev == null && mode == App.MODE_DEVICE)
+	// 					{
+	// 						if (file != null && 'chooseFileSystemEntries' in window)
+	// 						{
+	// 							this.chooseFileSystemEntries(mxUtils.bind(this, function(fileHandle, desc)
+	// 							{
+	// 								file.fileHandle = fileHandle;
+	// 								file.mode = App.MODE_DEVICE;
+	// 								file.title = desc.name;
+	// 								file.desc = desc;
 
-									this.setMode(App.MODE_DEVICE);
-									this.save(desc.name, done);
-								}), mxUtils.bind(this, function(e)
-								{
-									if (e.name != 'AbortError')
-									{
-										this.handleError(e);
-									}
-								}), this.createFileSystemOptions(name));
-							}
-							else
-							{
-								this.setMode(App.MODE_DEVICE);
-								this.save(name, done);
-							}
-						}
-						else if (mode == 'download')
-						{
-							var tmp = new LocalFile(this, null, name);
-							tmp.save();
-						}
-						else if (mode == '_blank')
-						{
-							window.openFile = new OpenFile(function()
-							{
-								window.openFile = null;
-							});
+	// 								this.setMode(App.MODE_DEVICE);
+	// 								this.save(desc.name, done);
+	// 							}), mxUtils.bind(this, function(e)
+	// 							{
+	// 								if (e.name != 'AbortError')
+	// 								{
+	// 									this.handleError(e);
+	// 								}
+	// 							}), this.createFileSystemOptions(name));
+	// 						}
+	// 						else
+	// 						{
+	// 							this.setMode(App.MODE_DEVICE);
+	// 							this.save(name, done);
+	// 						}
+	// 					}
+	// 					else if (mode == 'download')
+	// 					{
+	// 						var tmp = new LocalFile(this, null, name);
+	// 						tmp.save();
+	// 					}
+	// 					else if (mode == '_blank')
+	// 					{
+	// 						window.openFile = new OpenFile(function()
+	// 						{
+	// 							window.openFile = null;
+	// 						});
 							
-							// Do not use a filename to use undefined mode
-							window.openFile.setData(this.getFileData(true));
-							this.openLink(this.getUrl(window.location.pathname), null, true);
-						}
-						else if (prev != mode)
-						{
-							this.pickFolder(mode, mxUtils.bind(this, function(folderId)
-							{
-								this.createFile(name, this.getFileData(/(\.xml)$/i.test(name) ||
-									name.indexOf('.') < 0 || /(\.drawio)$/i.test(name),
-									/(\.svg)$/i.test(name), /(\.html)$/i.test(name)),
-									null, mode, done, this.mode == null, folderId);
-							}));
-						}
-						else if (mode != null)
-						{
-							this.save(name, done);
-						}
-					}
-				}
-			}), mxUtils.bind(this, function()
-			{
-				this.hideDialog();
-			}), mxResources.get('saveAs'), mxResources.get('download'), null, null, allowTab,
-				null, true, rowLimit, null, null, null, this.editor.fileExtensions, false);
-			this.showDialog(dlg.container, 400, (serviceCount > rowLimit) ? 390 : 270, true, true);
-			dlg.init();
-		}
-	}
+	// 						// Do not use a filename to use undefined mode
+	// 						window.openFile.setData(this.getFileData(true));
+	// 						this.openLink(this.getUrl(window.location.pathname), null, true);
+	// 					}
+	// 					else if (prev != mode)
+	// 					{
+	// 						this.pickFolder(mode, mxUtils.bind(this, function(folderId)
+	// 						{
+	// 							this.createFile(name, this.getFileData(/(\.xml)$/i.test(name) ||
+	// 								name.indexOf('.') < 0 || /(\.drawio)$/i.test(name),
+	// 								/(\.svg)$/i.test(name), /(\.html)$/i.test(name)),
+	// 								null, mode, done, this.mode == null, folderId);
+	// 						}));
+	// 					}
+	// 					else if (mode != null)
+	// 					{
+	// 						this.save(name, done);
+	// 					}
+	// 				}
+	// 			}
+	// 		}), mxUtils.bind(this, function()
+	// 		{
+	// 			this.hideDialog();
+	// 		}), mxResources.get('saveAs'), mxResources.get('download'), null, null, allowTab,
+	// 			null, true, rowLimit, null, null, null, this.editor.fileExtensions, false);
+	// 		this.showDialog(dlg.container, 400, (serviceCount > rowLimit) ? 390 : 270, true, true);
+	// 		dlg.init();
+	// 	}
+	// }
 };
 
 /**
@@ -5585,9 +5532,9 @@ App.prototype.descriptorChanged = function()
 		{
 			this.fnameWrapper.style.display = 'block';
 			this.fname.innerHTML = '';
-			var filename = (file.getTitle() != null) ? file.getTitle() : this.defaultFilename;
+			var filename = diagram_name;
 			mxUtils.write(this.fname, filename);
-			this.fname.setAttribute('title', filename + ' - ' + mxResources.get('rename'));
+			this.fname.setAttribute('title', filename);
 		}
 		
 		var graph = this.editor.graph;
@@ -5937,22 +5884,22 @@ App.prototype.updateHeader = function()
 				evt.preventDefault();
 			}));
 			
-			mxEvent.addListener(this.fname, 'click', mxUtils.bind(this, function(evt)
-			{
-				var file = this.getCurrentFile();
+			// mxEvent.addListener(this.fname, 'click', mxUtils.bind(this, function(evt)
+			// {
+			// 	var file = this.getCurrentFile();
 				
-				if (file != null && file.isRenamable())
-				{
-					if (this.editor.graph.isEditing())
-					{
-						this.editor.graph.stopEditing();
-					}
+			// 	if (file != null && file.isRenamable())
+			// 	{
+			// 		if (this.editor.graph.isEditing())
+			// 		{
+			// 			this.editor.graph.stopEditing();
+			// 		}
 
-					this.actions.get('rename').funct();
-				}
+			// 		this.actions.get('rename').funct();
+			// 	}
 				
-				mxEvent.consume(evt);
-			}));
+			// 	mxEvent.consume(evt);
+			// }));
 			
 			this.fnameWrapper.appendChild(this.fname);
 			

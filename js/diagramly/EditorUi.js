@@ -944,8 +944,10 @@
 	 * Workaround for malformed xhtml meta element bug 07.08.16. The trailing slash was missing causing
 	 * reopen to fail trying to parse. Used in replaceFileData, setFileData and importFile.
 	 */
+	/// 重点
 	EditorUi.prototype.validateFileData = function(data)
 	{
+		console.log(data);
 		if (data != null && data.length > 0)
 		{
 			var index = data.indexOf('<meta charset="utf-8">');
@@ -962,90 +964,7 @@
 		
 		return data;
 	};
-	
-	/**
-	 * 
-	 */
-	EditorUi.prototype.replaceFileData = function(data)
-	{
-		data = this.validateFileData(data);
-		var node = (data != null && data.length > 0) ? mxUtils.parseXml(data).documentElement : null;
 
-		// Some nodes must be extracted here to find the mxfile node
-		// LATER: Remove duplicate call to extractGraphModel in overridden setGraphXml
-		var tmp = (node != null) ? this.editor.extractGraphModel(node, true) : null;
-		
-		if (tmp != null)
-		{
-			node = tmp;
-		}
-
-		if (node != null)
-		{
-			var graph = this.editor.graph;
-			
-			graph.model.beginUpdate();
-			try
-			{
-				var oldPages = (this.pages != null) ? this.pages.slice() : null;
-				var nodes = node.getElementsByTagName('diagram');
-
-				if (urlParams['pages'] != '0' || nodes.length > 1 ||
-					(nodes.length == 1 && nodes[0].hasAttribute('name')))
-				{
-					this.fileNode = node;
-					this.pages = (this.pages != null) ? this.pages : [];
-					
-					// Wraps page nodes
-					for (var i = nodes.length - 1; i >= 0; i--)
-					{
-						var page = this.updatePageRoot(new DiagramPage(nodes[i]));
-						
-						// Checks for invalid page names
-						if (page.getName() == null)
-						{
-							page.setName(mxResources.get('pageWithNumber', [i + 1]));
-						}
-
-						graph.model.execute(new ChangePage(this, page, (i == 0) ? page : null, 0));
-					}
-				}
-				else
-				{
-					// Creates tabbed file structure if enforced by URL
-					if (urlParams['pages'] != '0' && this.fileNode == null)
-					{
-						this.fileNode = node.ownerDocument.createElement('mxfile');
-						this.currentPage = new DiagramPage(node.ownerDocument.createElement('diagram'));
-						this.currentPage.setName(mxResources.get('pageWithNumber', [1]));
-						graph.model.execute(new ChangePage(this, this.currentPage, this.currentPage, 0));
-					}
-					
-					// Avoids scroll offset when switching page
-					this.editor.setGraphXml(node);
-					
-					// Avoids duplicate parsing of the XML stored in the node
-					if (this.currentPage != null)
-					{
-						this.currentPage.root = this.editor.graph.model.root;
-					}
-				}
-				
-				if (oldPages != null)
-				{
-					for (var i = 0; i < oldPages.length; i++)
-					{
-						graph.model.execute(new ChangePage(this, oldPages[i], null));
-					}
-				}
-			}
-			finally
-			{
-				graph.model.endUpdate();
-			}
-		}
-	};
-	
 	/**
 	 * Translates this point by the given vector.
 	 * 
@@ -3393,6 +3312,7 @@
 					
 				    if (evt.dataTransfer.files.length > 0)
 				    {	
+						console.log(evt.dataTransfer.files);
 				    	this.importFiles(evt.dataTransfer.files, 0, 0, this.maxImageSize, mxUtils.bind(this, function(data, mimeType, x, y, w, h, img, doneFn, file)
 				    	{
 							if (data != null && mimeType.substring(0, 6) == 'image/')
@@ -7701,14 +7621,14 @@
 					{
 						// Using null for position will disable crop of input file
 						this.importFiles(input.files, null, null, this.maxImageSize);
-						
+						console.log(input.files);
 			    		// Resets input to force change event for same file (type reset required for IE)
 						input.type = '';
 						input.type = 'file';
 			    		input.value = '';
 					}
 				}));
-				
+				console.log(input.files);
 				input.style.display = 'none';
 				document.body.appendChild(input);
 				this.importFileInputElt = input;
@@ -7889,117 +7809,10 @@
 	EditorUi.prototype.importFile = function(data, mimeType, dx, dy, w, h, filename, done, file, crop, ignoreEmbeddedXml)
 	{
 		crop = (crop != null) ? crop : true;
-		var async = false;
 		var cells = null;
+		cells = this.insertTextAt(this.validateFileData(data), dx, dy, true, null, crop);
 		
-		var handleResult = mxUtils.bind(this, function(xml)
-		{
-			var importedCells = null;
-			
-			if (xml != null && xml.substring(0, 10) == '<mxlibrary')
-			{
-				this.loadLibrary(new LocalLibrary(this, xml, filename));
-			}
-			else
-			{
-				importedCells = this.importXml(xml, dx, dy, crop);
-			}
-			
-			if (done != null)
-			{
-				done(importedCells);
-			}
-		});
-		
-		if (mimeType.substring(0, 5) == 'image')
-		{
-			var containsModel = false;
-
-			if (mimeType.substring(0, 9) == 'image/png')
-			{
-				var xml = (ignoreEmbeddedXml) ? null : this.extractGraphModelFromPng(data);
-				
-				if (xml != null && xml.length > 0)
-				{
-					cells = this.importXml(xml, dx, dy, crop);
-					containsModel = true;
-				}
-			}
-			
-			if (!containsModel)
-			{
-				var graph = this.editor.graph;
-				
-				// Strips encoding bit (eg. ;base64,) for cell style
-				var semi = data.indexOf(';');
-	
-				if (semi > 0)
-				{
-					data = data.substring(0, semi) + data.substring(data.indexOf(',', semi + 1));
-				}
-				
-				if (crop && graph.isGridEnabled())
-				{
-					dx = graph.snap(dx);
-					dy = graph.snap(dy);
-				}
-
-				cells = [graph.insertVertex(null, null, '', dx, dy, w, h,
-					'shape=image;verticalLabelPosition=bottom;labelBackgroundColor=#ffffff;' +
-					'verticalAlign=top;aspect=fixed;imageAspect=0;image=' + data + ';')];
-			}
-		}
-		else if (/(\.*<graphml )/.test(data)) 
-        {
-			async = true;
-
-			this.importGraphML(data, handleResult);
-        }
-		else if (file != null && filename != null && ((/(\.v(dx|sdx?))($|\?)/i.test(filename)) || /(\.vs(x|sx?))($|\?)/i.test(filename)))
-		{
-			//  LATER: done and async are a hack before making this asynchronous
-			async = true;
-
-			this.importVisio(file, handleResult);
-		}
-		else if (!this.isOffline() && new XMLHttpRequest().upload && this.isRemoteFileFormat(data, filename))
-		{
-			//  LATER: done and async are a hack before making this asynchronous
-			async = true;
-
-			// Returns empty cells array as it is aysynchronous
-			this.parseFile((file != null) ? file : new Blob([data], {type: 'application/octet-stream'}), mxUtils.bind(this, function(xhr)
-			{
-				if (xhr.readyState == 4)
-				{
-					if (xhr.status >= 200 && xhr.status <= 299)
-					{
-						handleResult(xhr.responseText);
-					}
-					else if (done != null)
-					{
-						done(null);
-					}
-				}
-			}), filename);
-		}
-		else if (data.indexOf('PK') == 0 && file != null)
-		{
-			async = true;
-			
-			this.importZipFile(file, handleResult, mxUtils.bind(this, function()
-			{
-				//If importing as a zip file failed, just insert as text
-				cells = this.insertTextAt(this.validateFileData(data), dx, dy, true, null, crop);
-				done(cells);
-			}));
-		}
-		else if (!/(\.v(sd|dx))($|\?)/i.test(filename) && !/(\.vs(s|x))($|\?)/i.test(filename))
-		{
-			cells = this.insertTextAt(this.validateFileData(data), dx, dy, true, null, crop);
-		}
-		
-		if (!async && done != null)
+		if (done != null)
 		{
 			done(cells);
 		}
@@ -8046,17 +7859,19 @@
 	
 			fn = (fn != null) ? fn : mxUtils.bind(this, function(data, mimeType, x, y, w, h, filename, done, file)
 			{
+				
 				try
 				{
 					if (data != null && data.substring(0, 10) == '<mxlibrary')
 					{
 						this.spinner.stop();
 						this.loadLibrary(new LocalLibrary(this, data, filename));
-		    			
+		    		
 		    			return null;
 					}
 					else
 					{
+						console.log('----------------');
 						return this.importFile(data, mimeType, x, y, w, h, filename, done, file, crop, ignoreEmbeddedXml);
 					}
 				}
@@ -8075,6 +7890,7 @@
 			
 			if (this.spinner.spin(document.body, mxResources.get('loading')))
 			{
+				console.log(files)
 				var count = files.length;
 				var remain = count;
 				var queue = [];
@@ -8357,7 +8173,10 @@
 						    		else
 						    		{
 						    			var data = e.target.result;
-						    			
+						    			console.log(file);
+										console.log(data);
+										console.log(x + index * gs, y + index * gs)
+										console.log(fn);
 										fn(data, file.type, x + index * gs, y + index * gs, 240, 160, file.name, function(cells)
 										{
 											barrier(index, function()
@@ -8892,14 +8711,7 @@
 
 		// Specifies the default filename
 		// this.defaultFilename = mxResources.get('untitledDiagram');
-		if(diagram_name != undefined) 
-		{
-			this.defaultFilename = diagram_name;
-		}
-		else
-		{
-			this.defaultFilename = '未命名';
-		}
+		this.defaultFilename = '未命名';
 		console.log(this.defaultFilename);
 
 		// Adds export for %page%, %pagenumber% and %pagecount% placeholders
@@ -9063,72 +8875,73 @@
 						evt.preventDefault();
 					}));
 					
-					mxEvent.addListener(textElt, 'drop', mxUtils.bind(this, function(evt)
-					{
-					    if (dropElt != null)
-					    {
-					    	dropElt.parentNode.removeChild(dropElt);
-					    	dropElt = null;
-					    }
+					// mxEvent.addListener(textElt, 'drop', mxUtils.bind(this, function(evt)
+					// {
+					//     if (dropElt != null)
+					//     {
+					//     	dropElt.parentNode.removeChild(dropElt);
+					//     	dropElt = null;
+					//     }
 
-					    if (evt.dataTransfer.files.length > 0)
-					    {
-					    	this.importFiles(evt.dataTransfer.files, 0, 0, this.maxImageSize, function(data, mimeType, x, y, w, h)
-					    	{
-					    		// Inserts image into current text box
-					    		graph.insertImage(data, w, h);
-					    	}, function()
-					    	{
-					    		// No post processing
-					    	}, function(file)
-					    	{
-					    		// Handles only images
-					    		return file.type.substring(0, 6) == 'image/';
-					    	}, function(queue)
-					    	{
-					    		// Invokes elements of queue in order
-					    		for (var i = 0; i < queue.length; i++)
-					    		{
-					    			queue[i]();
-					    		}
-					    	}, mxEvent.isControlDown(evt));
-			    		}
-					    else if (mxUtils.indexOf(evt.dataTransfer.types, 'text/uri-list') >= 0)
-					    {
-					    	var uri = evt.dataTransfer.getData('text/uri-list');
+					//     if (evt.dataTransfer.files.length > 0)
+					//     {
+					// 		console.log(6666);
+					//     	this.importFiles(evt.dataTransfer.files, 0, 0, this.maxImageSize, function(data, mimeType, x, y, w, h)
+					//     	{
+					//     		// Inserts image into current text box
+					//     		graph.insertImage(data, w, h);
+					//     	}, function()
+					//     	{
+					//     		// No post processing
+					//     	}, function(file)
+					//     	{
+					//     		// Handles only images
+					//     		return file.type.substring(0, 6) == 'image/';
+					//     	}, function(queue)
+					//     	{
+					//     		// Invokes elements of queue in order
+					//     		for (var i = 0; i < queue.length; i++)
+					//     		{
+					//     			queue[i]();
+					//     		}
+					//     	}, mxEvent.isControlDown(evt));
+			    	// 	}
+					//     else if (mxUtils.indexOf(evt.dataTransfer.types, 'text/uri-list') >= 0)
+					//     {
+					//     	var uri = evt.dataTransfer.getData('text/uri-list');
 					    	
-					    	if ((/\.(gif|jpg|jpeg|tiff|png|svg)$/i).test(uri))
-							{
-				    			this.loadImage(decodeURIComponent(uri), mxUtils.bind(this, function(img)
-				    			{
-				    				var w = Math.max(1, img.width);
-			    					var h = Math.max(1, img.height);
-			    					var maxSize = this.maxImageSize;
+					//     	if ((/\.(gif|jpg|jpeg|tiff|png|svg)$/i).test(uri))
+					// 		{
+				    // 			this.loadImage(decodeURIComponent(uri), mxUtils.bind(this, function(img)
+				    // 			{
+				    // 				var w = Math.max(1, img.width);
+			    	// 				var h = Math.max(1, img.height);
+			    	// 				var maxSize = this.maxImageSize;
 
-				    				var s = Math.min(1, Math.min(maxSize / Math.max(1, w)), maxSize / Math.max(1, h));
-				    				graph.insertImage(decodeURIComponent(uri), w * s, h * s);
-				    			}));
-							}
-							else
-							{
-								document.execCommand('insertHTML', false, evt.dataTransfer.getData('text/plain'));
-							}
-					    }
-					    else
-					    {
-					    	if (mxUtils.indexOf(evt.dataTransfer.types, 'text/html') >= 0)
-						    {
-					    		document.execCommand('insertHTML', false, evt.dataTransfer.getData('text/html'));
-						    }
-						    else if (mxUtils.indexOf(evt.dataTransfer.types, 'text/plain') >= 0)
-						    {
-						    	document.execCommand('insertHTML', false, evt.dataTransfer.getData('text/plain'));
-						    }
-					    }
+				    // 				var s = Math.min(1, Math.min(maxSize / Math.max(1, w)), maxSize / Math.max(1, h));
+				    // 				graph.insertImage(decodeURIComponent(uri), w * s, h * s);
+				    // 			}));
+					// 		}
+					// 		else
+					// 		{
+					// 			document.execCommand('insertHTML', false, evt.dataTransfer.getData('text/plain'));
+					// 		}
+					//     }
+					//     else
+					//     {
+					//     	if (mxUtils.indexOf(evt.dataTransfer.types, 'text/html') >= 0)
+					// 	    {
+					//     		document.execCommand('insertHTML', false, evt.dataTransfer.getData('text/html'));
+					// 	    }
+					// 	    else if (mxUtils.indexOf(evt.dataTransfer.types, 'text/plain') >= 0)
+					// 	    {
+					// 	    	document.execCommand('insertHTML', false, evt.dataTransfer.getData('text/plain'));
+					// 	    }
+					//     }
 	
-					    evt.stopPropagation();
-					    evt.preventDefault();
-					}));
+					//     evt.stopPropagation();
+					//     evt.preventDefault();
+					// }));
 				}
 			}));
 		}
@@ -9275,7 +9088,7 @@
 							x = null;
 							y = null;
 						}
-						
+						consolelog(7777);
 						this.importFiles(evt.dataTransfer.files, x, y, this.maxImageSize, null, null, null, null,
 							mxEvent.isControlDown(evt), null, null, mxEvent.isShiftDown(evt));
 		    		}
@@ -9435,49 +9248,50 @@
 							}
 						}
 						
-						if (!containsText)
-						{
-							var items = data.items;
+						// if (!containsText)
+						// {
+						// 	var items = data.items;
 							
-							for (index in items)
-							{
-								var item = items[index];
+						// 	for (index in items)
+						// 	{
+						// 		var item = items[index];
 								
-								if (item.kind === 'file')
-								{
-									if (graph.isEditing())
-									{
-								    	this.importFiles([item.getAsFile()], 0, 0, this.maxImageSize, function(data, mimeType, x, y, w, h)
-								    	{
-								    		// Inserts image into current text box
-								    		graph.insertImage(data, w, h);
-								    	}, function()
-								    	{
-								    		// No post processing
-								    	}, function(file)
-								    	{
-								    		// Handles only images
-								    		return file.type.substring(0, 6) == 'image/';
-								    	}, function(queue)
-								    	{
-								    		// Invokes elements of queue in order
-								    		for (var i = 0; i < queue.length; i++)
-								    		{
-								    			queue[i]();
-								    		}
-								    	});
-									}
-									else
-									{
-										var pt = this.editor.graph.getInsertPoint();
-										this.importFiles([item.getAsFile()], pt.x, pt.y, this.maxImageSize);
-										mxEvent.consume(evt);
-									}
+						// 		if (item.kind === 'file')
+						// 		{
+						// 			if (graph.isEditing())
+						// 			{
+						// 				consolelog(8888);
+						// 		    	this.importFiles([item.getAsFile()], 0, 0, this.maxImageSize, function(data, mimeType, x, y, w, h)
+						// 		    	{
+						// 		    		// Inserts image into current text box
+						// 		    		graph.insertImage(data, w, h);
+						// 		    	}, function()
+						// 		    	{
+						// 		    		// No post processing
+						// 		    	}, function(file)
+						// 		    	{
+						// 		    		// Handles only images
+						// 		    		return file.type.substring(0, 6) == 'image/';
+						// 		    	}, function(queue)
+						// 		    	{
+						// 		    		// Invokes elements of queue in order
+						// 		    		for (var i = 0; i < queue.length; i++)
+						// 		    		{
+						// 		    			queue[i]();
+						// 		    		}
+						// 		    	});
+						// 			}
+						// 			else
+						// 			{
+						// 				var pt = this.editor.graph.getInsertPoint();
+						// 				this.importFiles([item.getAsFile()], pt.x, pt.y, this.maxImageSize);
+						// 				mxEvent.consume(evt);
+						// 			}
 									
-									break;
-								}
-							}
-						}
+						// 			break;
+						// 		}
+						// 	}
+						// }
 					}
 					catch (e)
 					{
@@ -10226,16 +10040,16 @@
 						{
 							this.hideDialog();
 							
-							// Never open files in embed mode
-							if (urlParams['embed'] == '1')
-							{
-								this.importFiles(evt.dataTransfer.files, 0, 0, this.maxImageSize, null, null,
-									null, null, !mxEvent.isControlDown(evt) && !mxEvent.isShiftDown(evt));
-							}
-							else
-							{
-								this.openFiles(evt.dataTransfer.files, true);
-							}
+							// // Never open files in embed mode
+							// if (urlParams['embed'] == '1')
+							// {
+							// 	this.importFiles(evt.dataTransfer.files, 0, 0, this.maxImageSize, null, null,
+							// 		null, null, !mxEvent.isControlDown(evt) && !mxEvent.isShiftDown(evt));
+							// }
+							// else
+							// {
+							// 	this.openFiles(evt.dataTransfer.files, true);
+							// }
 						}
 						else
 						{
@@ -13567,36 +13381,38 @@
 	 */
 	EditorUi.prototype.setDatabaseItem = function(key, data, success, error, storeName)
 	{
-		this.openDatabase(mxUtils.bind(this, function(db)
-		{
-			try
-			{
-				storeName = storeName || 'objects';
+		console.log(JSON.parse(data));
+		update_diagram(JSON.parse(data)["data"]);
+		// this.openDatabase(mxUtils.bind(this, function(db)
+		// {
+		// 	try
+		// 	{
+		// 		storeName = storeName || 'objects';
 				
-				if (!Array.isArray(storeName))
-				{
-					storeName = [storeName];
-					key = [key];
-					data = [data];
-				}
+		// 		if (!Array.isArray(storeName))
+		// 		{
+		// 			storeName = [storeName];
+		// 			key = [key];
+		// 			data = [data];
+		// 		}
 				
-				var trx = db.transaction(storeName, 'readwrite');
-				trx.oncomplete = success;
-				trx.onerror = error;
+		// 		var trx = db.transaction(storeName, 'readwrite');
+		// 		trx.oncomplete = success;
+		// 		trx.onerror = error;
 		        
-				for (var i = 0; i < storeName.length; i++)
-				{
-					trx.objectStore(storeName[i]).put(key != null && key[i] != null? {key: key[i], data: data[i]} : data[i]);
-				}
-			}
-			catch (e)
-			{
-				if (error != null)
-				{
-					error(e);
-				}
-			}
-		}), error);
+		// 		for (var i = 0; i < storeName.length; i++)
+		// 		{
+		// 			trx.objectStore(storeName[i]).put(key != null && key[i] != null? {key: key[i], data: data[i]} : data[i]);
+		// 		}
+		// 	}
+		// 	catch (e)
+		// 	{
+		// 		if (error != null)
+		// 		{
+		// 			error(e);
+		// 		}
+		// 	}
+		// }), error);
 	};
 
 	/**
@@ -13604,25 +13420,25 @@
 	 */
 	EditorUi.prototype.removeDatabaseItem = function(key, success, error, storeName)
 	{
-		this.openDatabase(mxUtils.bind(this, function(db)
-		{
-			storeName = storeName || 'objects';
+		// this.openDatabase(mxUtils.bind(this, function(db)
+		// {
+		// 	storeName = storeName || 'objects';
 			
-			if (!Array.isArray(storeName))
-			{
-				storeName = [storeName];
-				key = [key];
-			}
+		// 	if (!Array.isArray(storeName))
+		// 	{
+		// 		storeName = [storeName];
+		// 		key = [key];
+		// 	}
 			
-			var trx = db.transaction(storeName, 'readwrite');
-			trx.oncomplete = success;
-			trx.onerror = error;
+		// 	var trx = db.transaction(storeName, 'readwrite');
+		// 	trx.oncomplete = success;
+		// 	trx.onerror = error;
 			
-			for (var i = 0; i < storeName.length; i++)
-			{
-				trx.objectStore(storeName[i]).delete(key[i]);
-			}
-		}), error);
+		// 	for (var i = 0; i < storeName.length; i++)
+		// 	{
+		// 		trx.objectStore(storeName[i]).delete(key[i]);
+		// 	}
+		// }), error);
 	};
 	
 	/**

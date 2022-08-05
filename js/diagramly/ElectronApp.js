@@ -206,7 +206,9 @@ mxStencilRegistry.allowEval = false;
 			this.addSubmenu('openRecent', menu, parent);
 			this.addMenuItems(menu, [
 				// '-', 'synchronize',
-				 '-', 'save', 'saveAs', '-', 'import'], parent);
+				 '-', 'save'
+				 , 'saveAs', '-', 'import'
+				], parent);
 			this.addSubmenu('exportAs', menu, parent);
 			menu.addSeparator(parent);
 			this.addSubmenu('embed', menu, parent);
@@ -1452,7 +1454,7 @@ mxStencilRegistry.allowEval = false;
 	App.prototype.saveFile = function(forceDialog)
 	{
 		var file = this.getCurrentFile();
-		
+		console.log('1---1');
 		if (file != null)
 		{
 			if (!forceDialog && file.getTitle() != null)

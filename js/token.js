@@ -32,6 +32,8 @@ if (window.location.hash != null && window.location.hash.substring(0, 2) == '#P'
 var project_id;
 var diagram_id;
 var diagram_name;
+var diagram_content;
+console.log(urlParams['diagram_token'])
 function parse_token() {
     $.ajax({
         type: "post",
@@ -40,58 +42,41 @@ function parse_token() {
             "diagram_token": urlParams['diagram_token']
         },
         dataType: "json",
-        success:function(data) {
-            project_id = data['payload']['project_id']
-            diagram_id = data['payload']['diagram_id']
-            diagram_name = data['payload']['diagram_name']
-            console.log(data);
-            console.log(project_id);
-            console.log(diagram_id);
-            console.log(diagram_name);
-        }
-    });
-}
-
-function create_diagram(diagram_name) {
-    $.ajax({
-        type: "post",
-        url: "https://summer.super2021.com/api/diagram/create_diagram",
-        data: {
-            "project_id": this.project_id,
-            "diagram_name": diagram_name
-        },
-        dataType: "json",
-        success:function(data){
+        success: function(data) {
+            project_id = data['payload']['project_id'];
+            diagram_id = data['payload']['diagram_id'];
+            diagram_name = data['payload']['diagram_name'];
+            get_content();
             console.log(data);
         }
     });
 }
 
-function rename_diagram(diagram_old_name, diagram_new_name) {
+function update_diagram(diagram_content) {
     $.ajax({
         type: "post",
-        url: "https://summer.super2021.com/api/diagram/rename_diagram",
+        url: "https://summer.super2021.com/api/diagram/update_diagram",
         data: {
-            "diagram_old_name": diagram_old_name,
-            "diagram_new_name": diagram_new_name,
+            "diagram_id": this.diagram_id,
+            "diagram_content": diagram_content
         },
         dataType: "json",
-        success:function(data){
+        success: function(data){
             console.log(data);
         }
     });
 }
 
-function delete_diagram(diagram_name) {
+function get_content() {
     $.ajax({
         type: "post",
-        url: "https://summer.super2021.com/api/diagram/delete_diagram",
+        url: "https://summer.super2021.com/api/diagram/get_content",
         data: {
-            "diagram_name": diagram_name
+            "diagram_id": this.diagram_id
         },
         dataType: "json",
-        success:function(data){
-            console.log(data);
+        success: function(data){
+            diagram_content = data['diagram_content'];
         }
     });
 }

@@ -21,7 +21,7 @@
 	/**
 	 * Specifies the app name. Default is document.title.
 	 */
-	Editor.prototype.appName = 'afc-diagrams';
+	Editor.prototype.appName = diagram_name;
 		
 	/**
 	 * Known file types.

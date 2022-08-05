@@ -149,21 +149,21 @@ StorageFile.insertFile = function(ui, title, data, success, error)
  */
 StorageFile.getFileContent = function(ui, title, success, error)
 {
-	ui.getDatabaseItem(title, function(obj)
-	{
-		success(obj != null? obj.data : null);
-	}, 
-	mxUtils.bind(this, function()
-	{
-		if (ui.database == null) //fallback to localstorage
-		{
-			ui.getLocalData(title, success);
-		}
-		else if (error != null)
-		{
-			error();
-		}
-	}), 'files');
+	// ui.getDatabaseItem(title, function(obj)
+	// {
+	// 	success(obj != null? obj.data : null);
+	// }, 
+	// mxUtils.bind(this, function()
+	// {
+	// 	if (ui.database == null) //fallback to localstorage
+	// 	{
+	// 		ui.getLocalData(title, success);
+	// 	}
+	// 	else if (error != null)
+	// 	{
+	// 		error();
+	// 	}
+	// }), 'files');
 };
 
 /**
@@ -449,11 +449,7 @@ StorageFile.listFiles = function(ui, type, success, error)
 			{
 				if (filesInfo[i].title.charAt(0) != '.' && (type == null || filesInfo[i].type == type))
 				{
-					// 匹配同一项目id
-					if(filesInfo[i].title.match(project_id + '-') != null) 
-					{
-						files.push(filesInfo[i]);
-					}
+					files.push(filesInfo[i]);
 				}
 			}
 		}

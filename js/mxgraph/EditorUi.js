@@ -2964,7 +2964,7 @@ EditorUi.prototype.updateDocumentTitle = function()
 	
 	if (this.editor.appName != null)
 	{
-		title += ' - ' + this.editor.appName;
+		title = '墨书' + ' - ' + this.editor.appName;
 	}
 	
 	document.title = title;

@@ -1630,6 +1630,7 @@ var BackgroundImageDialog = function(editorUi, applyFn, img)
 
 			    if (evt.dataTransfer.files.length > 0)
 			    {
+					console.log(1111);
 			    	editorUi.importFiles(evt.dataTransfer.files, 0, 0, editorUi.maxBackgroundSize, function(data, mimeType, x, y, w, h)
 			    	{
 			    		urlInput.value = data;
@@ -2776,7 +2777,7 @@ var NewDialog = function(editorUi, compact, showName, callback, createOnly, canc
 				editorUi.hideDialog();
 			}
 			console.log(111);
-			openExtDocCallback(templateExtUrl, templateInfoObj, project_id + '-' + nameInput.value);
+			openExtDocCallback(templateExtUrl, templateInfoObj, nameInput.value);
 		}
 		else if (callback)
 		{
@@ -2790,7 +2791,7 @@ var NewDialog = function(editorUi, compact, showName, callback, createOnly, canc
 		else
 		{
 			console.log(333);
-			var title = project_id + '-' +  nameInput.value;
+			var title = nameInput.value;
 				
 			if (title != null && title.length > 0)
 			{
@@ -2806,7 +2807,6 @@ var NewDialog = function(editorUi, compact, showName, callback, createOnly, canc
 				}, editorUi.mode != App.MODE_GOOGLE ||
 					editorUi.stateArg == null ||
 					editorUi.stateArg.folderId == null);
-				create_diagram(title);
 			}
 		}
 	};
@@ -3785,7 +3785,6 @@ var CreateDialog = function(editorUi, title, createFn, cancelFn, dlgTitle, btnLa
 			
 			createFn(title, mode, nameInput);
 		};
-		rename_diagram(project_id + '-' + '未命名', project_id + '-' +  title);
 	}
 	
 	if (cancelFn == null)
@@ -4104,6 +4103,7 @@ var ImageDialog = function(editorUi, title, initialValue, fn, ignoreExisting, co
 
 			    if (evt.dataTransfer.files.length > 0)
 			    {
+					console.log(2222);
 			    	editorUi.importFiles(evt.dataTransfer.files, 0, 0, editorUi.maxImageSize, function(data, mimeType, x, y, w, h, fileName, resize)
 			    	{
 			    		apply(data, resize);
@@ -4187,6 +4187,7 @@ var ImageDialog = function(editorUi, title, initialValue, fn, ignoreExisting, co
 			{
 				if (fileInput.files != null)
 				{
+					
 					editorUi.importFiles(fileInput.files, 0, 0, editorUi.maxImageSize, function(data, mimeType, x, y, w, h)
 			    	{
 			    		apply(data);
@@ -8414,6 +8415,7 @@ var LibraryDialog = function(editorUi, name, library, initialImages, file, mode)
 		}
 		else if (evt.dataTransfer.files.length > 0)
 		{
+			console.log(4444);
 			editorUi.importFiles(evt.dataTransfer.files, 0, 0, editorUi.maxImageSize, createImportHandler(evt));
 		}
 		else if (mxUtils.indexOf(evt.dataTransfer.types, 'text/uri-list') >= 0)
@@ -8509,7 +8511,7 @@ var LibraryDialog = function(editorUi, name, library, initialImages, file, mode)
 	{
 		console.log(888);
     	var data = editorUi.createLibraryDataFromImages(images);
-    	var filename = project_id + '-' +  nameInput.value;
+    	var filename = nameInput.value;
 	    	
 		if (!/(\.xml)$/i.test(filename))
 		{
@@ -8542,7 +8544,6 @@ var LibraryDialog = function(editorUi, name, library, initialImages, file, mode)
 			mxEvent.addListener(fileInput, 'change', function(evt)
 			{
 		    	errorShowed = false;
-
 		    	editorUi.importFiles(fileInput.files, 0, 0, editorUi.maxImageSize, function(data, mimeType, x, y, w, h, img, doneFn, file)
 		    	{
 					if (fileInput.files != null)
@@ -8630,7 +8631,7 @@ var LibraryDialog = function(editorUi, name, library, initialImages, file, mode)
 			stopEditing = null;
 		}
 		console.log(999);
-		this.saveBtnClickHandler(project_id + '-' + nameInput.value, images, file, mode);
+		this.saveBtnClickHandler( nameInput.value, images, file, mode);
 	}));
 	
 	btn.setAttribute('id', 'btnSave');
@@ -8758,7 +8759,7 @@ var EditShapeDialog = function(editorUi, cell, title, w, h)
 	var updateShape = function(targetGraph, targetCell, hide)
 	{
 		console.log(101010);
-		var newValue = project_id + '-' +  nameInput.value;
+		var newValue = nameInput.value;
 		
 		// Checks if XML has changed (getPrettyXml "normalizes" DOM)
 		var doc = mxUtils.parseXml(newValue);

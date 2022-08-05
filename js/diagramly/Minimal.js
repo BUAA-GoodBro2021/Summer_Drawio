@@ -834,16 +834,16 @@ EditorUi.initMinimalTheme = function()
 				ui.menus.addMenuItems(menu, ['-', 'print', '-'], parent);
 			}
 			
-			ui.menus.addSubmenu('help', menu, parent);
+			// ui.menus.addSubmenu('help', menu, parent);
 
-            if (urlParams['embed'] == '1')
-			{
-				ui.menus.addMenuItems(menu, ['-', 'exit'], parent);
-			}
-			else
-			{
-				ui.menus.addMenuItems(menu, ['-', 'close']);
-			}
+            // if (urlParams['embed'] == '1')
+			// {
+			// 	ui.menus.addMenuItems(menu, ['-', 'exit'], parent);
+			// }
+			// else
+			// {
+			// 	ui.menus.addMenuItems(menu, ['-', 'close']);
+			// }
         })));
 
 		this.put('save', new Menu(mxUtils.bind(this, function(menu, parent)
